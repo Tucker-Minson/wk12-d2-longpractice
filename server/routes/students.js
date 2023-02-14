@@ -18,7 +18,26 @@ router.get('/', async (req, res, next) => {
     // Phase 2B: Add an error message to errorResult.errors of
         // 'Requires valid page and size params' when page or size is invalid
     // Your code here
+    let query = {
+        where: {},
+        include: []
+    };
+    // let { page, size } = req.query
+    // if (!page) page = 1;
+    // if (!size) size = 10;
 
+    const page = req.query.page === undefined ? 1 : parseInt(req.query.page);
+    const size = req.query.size === undefined ? 10 : parseInt(req.query.size);
+
+    if (page >= 1 && size >= 1) {
+        query.limit = size;
+        query.offset = size * (page - 1);
+    } else if (page === 0 && size === 0) {
+        // query.limit = -1;
+        query.offset = 0;
+    } else {
+        errorResult.errors.push({ message: 'Requires valid page and size params' });
+    }
     // Phase 4: Student Search Filters
     /*
         firstName filter:
@@ -48,6 +67,13 @@ router.get('/', async (req, res, next) => {
 
 
     // Phase 2C: Handle invalid params with "Bad Request" response
+    //check if page and size are numbers, if not push message into error array
+    if (typeof(page) !== 'number' || typeof(size) !== 'number') {
+        errorResult.errors.push({ message: 'Requires valid page and size params' });
+    }
+
+
+    console.log(errorResult.errors)
     // Phase 3C: Include total student count in the response even if params were
         // invalid
         /*
@@ -85,7 +111,8 @@ router.get('/', async (req, res, next) => {
         attributes: ['id', 'firstName', 'lastName', 'leftHanded'],
         where,
         // Phase 1A: Order the Students search results
-        order
+        order,
+        ...query
     });
 
     // Phase 2E: Include the page number as a key of page in the response data
@@ -99,6 +126,7 @@ router.get('/', async (req, res, next) => {
             }
         */
     // Your code here
+    result.page = page === 0 ? 1 : page;
 
     // Phase 3B:
         // Include the total number of available pages for this query as a key
@@ -116,6 +144,9 @@ router.get('/', async (req, res, next) => {
         */
     // Your code here
 
+    if (errorResult.errors.length !== 0) {
+        res.status(400).json(errorResult)
+    }
     res.json(result);
 });
 
