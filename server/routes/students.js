@@ -12,7 +12,7 @@ router.get('/', async (req, res, next) => {
 
     // Phase 2A: Use query params for page & size
     // Your code here
-
+    const {lastName, firstName} = req.query;
     // Phase 2B: Calculate limit and offset
     // Phase 2B (optional): Special case to return all students (page=0, size=0)
     // Phase 2B: Add an error message to errorResult.errors of
@@ -65,7 +65,18 @@ router.get('/', async (req, res, next) => {
     // Your code here
 
     let result = {};
+    let order = [];
 
+    if (lastName) {
+        order.push(
+            ["lastName"],
+            )
+        }
+    if (firstName) {
+        order.push(
+            ["firstName"],
+            )
+        }
     // Phase 3A: Include total number of results returned from the query without
         // limits and offsets as a property of count on the result
         // Note: This should be a new query
@@ -74,6 +85,7 @@ router.get('/', async (req, res, next) => {
         attributes: ['id', 'firstName', 'lastName', 'leftHanded'],
         where,
         // Phase 1A: Order the Students search results
+        order
     });
 
     // Phase 2E: Include the page number as a key of page in the response data
