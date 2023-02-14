@@ -19,7 +19,6 @@ router.get('/', async (req, res, next) => {
         // 'Requires valid page and size params' when page or size is invalid
     // Your code here
     let query = {
-        where: {},
         include: []
     };
     // let { page, size } = req.query
@@ -64,6 +63,25 @@ router.get('/', async (req, res, next) => {
     const where = {};
 
     // Your code here
+    if (req.query.firstName) {
+        where.firstName = {
+            [Op.like]:`%${req.query.firstName}%`
+        }
+    }
+    if (req.query.lastName) {
+        where.lastName = {
+            [Op.like]:`%${req.query.lastName}%`
+        }
+    }
+    if (req.query.lefty) {
+        if (req.query.lefty === 'true') {
+            where.leftHanded = true
+        } else if (req.query.lefty === 'false') {
+            where.leftHanded = false
+        } else  {
+            errorResult.errors.push({ message: 'Lefty should be either true or false' });
+        }
+    }
 
 
     // Phase 2C: Handle invalid params with "Bad Request" response
@@ -73,7 +91,7 @@ router.get('/', async (req, res, next) => {
     }
 
 
-    console.log(errorResult.errors)
+    // console.log(errorResult.errors)
     // Phase 3C: Include total student count in the response even if params were
         // invalid
         /*
@@ -106,8 +124,10 @@ router.get('/', async (req, res, next) => {
     // Phase 3A: Include total number of results returned from the query without
         // limits and offsets as a property of count on the result
         // Note: This should be a new query
-        result.count = await Student.count()
-        result.pageCount = Math.ceil(result.count/ size)
+    let recordCount = await Student.count();
+    result.count = recordCount;
+    result.pageCount = Math.ceil(recordCount/ size)
+
     result.rows = await Student.findAll({
         attributes: ['id', 'firstName', 'lastName', 'leftHanded'],
         where,
@@ -115,6 +135,8 @@ router.get('/', async (req, res, next) => {
         order,
         ...query
     });
+
+    result.returnCount = result.rows.length;
 
     // Phase 2E: Include the page number as a key of page in the response data
         // In the special case (page=0, size=0) that returns all students, set
@@ -146,8 +168,8 @@ router.get('/', async (req, res, next) => {
     // Your code here
 
     if (errorResult.errors.length !== 0) {
-        errorResult.count = 267
-        res.status(400).json(errorResult)
+        errorResult.count = recordCount;
+        return res.status(400).json(errorResult)
     }
     res.json(result);
 });
