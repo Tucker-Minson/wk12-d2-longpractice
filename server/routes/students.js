@@ -106,7 +106,8 @@ router.get('/', async (req, res, next) => {
     // Phase 3A: Include total number of results returned from the query without
         // limits and offsets as a property of count on the result
         // Note: This should be a new query
-
+        result.count = await Student.count()
+        result.pageCount = Math.ceil(result.count/ size)
     result.rows = await Student.findAll({
         attributes: ['id', 'firstName', 'lastName', 'leftHanded'],
         where,
@@ -145,6 +146,7 @@ router.get('/', async (req, res, next) => {
     // Your code here
 
     if (errorResult.errors.length !== 0) {
+        errorResult.count = 267
         res.status(400).json(errorResult)
     }
     res.json(result);
