@@ -36,6 +36,35 @@ router.get('/', async (req, res, next) => {
     */
     const where = {};
 
+    if (req.query.name) {
+        where.name = {
+            [Op.like]:`%${req.query.name}%`
+        }
+    }
+
+    if (req.query.studentLimit) {
+        if (req.query.studentLimit.indexOf(",") > 0) {
+            const bounds = req.query.studentLimit.split(",");
+            const [lowerBound, upperBound] = bounds;
+            if (lowerBound > upperBound) {
+                errorResult.errors.push({"message":"Student Limit should be two numbers: min,max && min should be less than max"})
+            }
+            if (lowerBound === "" || upperBound === "") {
+                errorResult.errors.push({"message":"Student Limit should be two numbers: min,max"})
+            }
+            where.studentLimit = {
+                [Op.between]: [lowerBound, upperBound]
+            }
+        } else {
+            if (Number.isInteger(parseInt(req.query.studentLimit))) {
+                where.studentLimit = req.query.studentLimit
+
+            } else {
+                errorResult.errors.push({"message":"Student Limit should be an integer"})
+            }
+        }
+    }
+
     const classrooms = await Classroom.findAll({
         attributes: ['id', 'name', 'studentLimit'],
         where,
@@ -44,6 +73,9 @@ router.get('/', async (req, res, next) => {
         order: [["name"]]
     });
 
+    if (errorResult.errors.length !== 0) {
+        return res.status(400).json(errorResult);
+    }
     res.json(classrooms);
 });
 
@@ -99,6 +131,8 @@ router.get('/:id', async (req, res, next) => {
     classroomPojo.overloaded = overloaded
     // Optional Phase 5D: Calculate the average grade of the classroom
     // Your code here
+
+
 
     res.json(classroomPojo);
 });
