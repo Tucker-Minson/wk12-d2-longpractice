@@ -86,6 +86,11 @@ router.get('/:id', async (req, res, next) => {
         // Phase 7:
         // Include classroom supplies and order supplies by category then
         // name (both in ascending order)
+        include: {
+            model: Supply,
+            order: [["catagory"],["name"]]
+        },
+
         // Include students of the classroom and order students by lastName
         // then firstName (both in ascending order)
         // (Optional): No need to include the StudentClassrooms
